@@ -1,100 +1,12 @@
-version: '2'
+version: '3'
 services:
-  openldap:
-    image: osixia/openldap:1.5.0
-    container_name: openldap
-    environment:
-      LDAP_LOG_LEVEL: "256"
-      LDAP_ORGANISATION: "Example Inc."
-      LDAP_DOMAIN: "example.org"
-      LDAP_BASE_DN: ""
-      LDAP_ADMIN_PASSWORD: "admin"
-      LDAP_CONFIG_PASSWORD: "config"
-      LDAP_READONLY_USER: "false"
-      #LDAP_READONLY_USER_USERNAME: "readonly"
-      #LDAP_READONLY_USER_PASSWORD: "readonly"
-      LDAP_RFC2307BIS_SCHEMA: "false"
-      LDAP_BACKEND: "mdb"
-      LDAP_TLS: "true"
-      LDAP_TLS_CRT_FILENAME: "ldap.crt"
-      LDAP_TLS_KEY_FILENAME: "ldap.key"
-      LDAP_TLS_DH_PARAM_FILENAME: "dhparam.pem"
-      LDAP_TLS_CA_CRT_FILENAME: "ca.crt"
-      LDAP_TLS_ENFORCE: "false"
-      LDAP_TLS_CIPHER_SUITE: "SECURE256:-VERS-SSL3.0"
-      LDAP_TLS_VERIFY_CLIENT: "demand"
-      LDAP_REPLICATION: "false"
-      #LDAP_REPLICATION_CONFIG_SYNCPROV: 'binddn="cn=admin,cn=config" bindmethod=simple credentials="$$LDAP_CONFIG_PASSWORD" searchbase="cn=config" type=refreshAndPersist retry="60 +" timeout=1 starttls=critical'
-      #LDAP_REPLICATION_DB_SYNCPROV: 'binddn="cn=admin,$$LDAP_BASE_DN" bindmethod=simple credentials="$$LDAP_ADMIN_PASSWORD" searchbase="$$LDAP_BASE_DN" type=refreshAndPersist interval=00:00:00:10 retry="60 +" timeout=1 starttls=critical'
-      #LDAP_REPLICATION_HOSTS: "#PYTHON2BASH:['ldap://ldap.example.org','ldap://ldap2.example.org']"
-      KEEP_EXISTING_CONFIG: "false"
-      LDAP_REMOVE_CONFIG_AFTER_SETUP: "true"
-      LDAP_SSL_HELPER_PREFIX: "ldap"
-    tty: true
-    stdin_open: true
-    volumes:
-      - /opt/self-hosted/data/ldap:/var/lib/ldap
-      - /opt/self-hosted/data/dldap.d:/etc/ldap/slapd.d
-      - /container/service/slapd/assets/certs/
-    ports:
-      - "389:389"
-      - "636:636"
-    # For replication to work correctly, domainname and hostname must be
-    # set correctly so that "hostname"."domainname" equates to the
-    # fully-qualified domain name for the host.
-    domainname: "example.org"
-    hostname: "ldap-server"
-  phpldapadmin:
-    image: osixia/phpldapadmin:latest
-    container_name: phpldapadmin
-    environment:
-      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
-      PHPLDAPADMIN_HTTPS: "false"
-    ports:
-      - "8080:80"
-    depends_on:
-      - openldap
-  gitlab-web:
-    image: 'gitlab/gitlab-ce:latest'
-    restart: always
-    hostname: 'gitlab'
-    container_name: gitlab-ce
-    environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.localhost'
-        gitlab_rails['ldap_enabled'] = true
-        gitlab_rails['ldap_host'] = 'openldap'
-        gitlab_rails['ldap_port'] = 389
-        gitlab_rails['ldap_uid'] = 'uid'
-        gitlab_rails['ldap_method'] = 'plain' # 'ssl' or 'plain'
-        gitlab_rails['ldap_bind_dn'] = 'cn=admin,dc=example,dc=org'
-        gitlab_rails['ldap_password'] = 'admin'
-        gitlab_rails['ldap_allow_username_or_email_login'] = true
-        gitlab_rails['ldap_base'] = 'dc=example,dc=org' 
-    ports:
-      - '80:80'
-      - '443:443'
-      - '22:22'
-    # ports:
-      # - '8080:80'
-      # - '8443:443'
-    volumes:
-      - '$GITLAB_HOME/config:/etc/gitlab'
-      - '$GITLAB_HOME/logs:/var/log/gitlab'
-      - '$GITLAB_HOME/data:/var/opt/gitlab'
-    networks:
-      - gitlab
-  gitlab-runner:
-    image: gitlab/gitlab-runner:alpine
-    container_name: gitlab-runner    
-    restart: always
-    depends_on:
-      - gitlab-web
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - '$GITLAB_HOME/gitlab-runner:/etc/gitlab-runner'
-    networks:
-      - gitlab
-networks:
-  gitlab:
-    name: gitlab-network
+  nginx:
+    build: nginx
+  # openldap:
+  #   build: openldap
+  # phpldapadmin:
+  #   build: phpldapadmin
+  # ngitlab-web:
+  #  build: gitlab-web
+  # gitlab-runner:
+  #   build gitlab-runner

@@ -1,0 +1,13 @@
+# https://stackoverflow.com/questions/53882200/how-to-shareexpose-port-80-for-multiple-projects-while-using-docker
+version: '3'
+services:
+  parent:
+    image: nginx:alpine
+    volume:
+         - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+         - 80:80
+networks:
+  default:
+    external:
+      name: mycomp
