@@ -7,7 +7,7 @@ services:
       LDAP_LOG_LEVEL: "256"
       LDAP_ORGANISATION: "Example Inc."
       LDAP_DOMAIN: "example.org"
-      LDAP_BASE_DN: ""
+      LDAP_BASE_DN: "dc=example,dc=org"
       LDAP_ADMIN_PASSWORD: "admin"
       LDAP_CONFIG_PASSWORD: "config"
       LDAP_READONLY_USER: "false"
@@ -54,47 +54,47 @@ services:
       - "8080:80"
     depends_on:
       - openldap
-  gitlab-web:
-    image: 'gitlab/gitlab-ce:latest'
-    restart: always
-    hostname: 'gitlab'
-    container_name: gitlab-ce
-    environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.localhost'
-        gitlab_rails['ldap_enabled'] = true
-        gitlab_rails['ldap_host'] = 'openldap'
-        gitlab_rails['ldap_port'] = 389
-        gitlab_rails['ldap_uid'] = 'uid'
-        gitlab_rails['ldap_method'] = 'plain' # 'ssl' or 'plain'
-        gitlab_rails['ldap_bind_dn'] = 'cn=admin,dc=example,dc=org'
-        gitlab_rails['ldap_password'] = 'admin'
-        gitlab_rails['ldap_allow_username_or_email_login'] = true
-        gitlab_rails['ldap_base'] = 'dc=example,dc=org' 
-    ports:
-      - '80:80'
-      - '443:443'
-      - '22:22'
-    # ports:
-      # - '8080:80'
-      # - '8443:443'
-    volumes:
-      - '$GITLAB_HOME/config:/etc/gitlab'
-      - '$GITLAB_HOME/logs:/var/log/gitlab'
-      - '$GITLAB_HOME/data:/var/opt/gitlab'
-    networks:
-      - gitlab
-  gitlab-runner:
-    image: gitlab/gitlab-runner:alpine
-    container_name: gitlab-runner    
-    restart: always
-    depends_on:
-      - gitlab-web
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - '$GITLAB_HOME/gitlab-runner:/etc/gitlab-runner'
-    networks:
-      - gitlab
+  # gitlab-web:
+  #   image: 'gitlab/gitlab-ce:latest'
+  #   restart: always
+  #   hostname: 'localhost'
+  #   container_name: gitlab-ce
+  #   environment:
+  #     GITLAB_OMNIBUS_CONFIG: |
+  #       external_url 'http://gitlab.localhost'
+  #       gitlab_rails['ldap_enabled'] = true
+  #       gitlab_rails['ldap_host'] = 'openldap'
+  #       gitlab_rails['ldap_port'] = 389
+  #       gitlab_rails['ldap_uid'] = 'uid'
+  #       gitlab_rails['ldap_method'] = 'plain' # 'ssl' or 'plain'
+  #       gitlab_rails['ldap_bind_dn'] = 'cn=admin,dc=example,dc=org'
+  #       gitlab_rails['ldap_password'] = 'admin'
+  #       gitlab_rails['ldap_allow_username_or_email_login'] = true
+  #       gitlab_rails['ldap_base'] = 'dc=example,dc=org' 
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #     - '22:22'
+  #   # ports:
+  #     # - '8080:80'
+  #     # - '8443:443'
+  #   volumes:
+  #     - '$GITLAB_HOME/config:/etc/gitlab'
+  #     - '$GITLAB_HOME/logs:/var/log/gitlab'
+  #     - '$GITLAB_HOME/data:/var/opt/gitlab'
+  #   networks:
+  #     - gitlab
+  # gitlab-runner:
+  #  image: gitlab/gitlab-runner:alpine
+  #  container_name: gitlab-runner    
+  #  restart: always
+  #  depends_on:
+  #    - gitlab-web
+  #  volumes:
+  #    - /var/run/docker.sock:/var/run/docker.sock
+  #    - '$GITLAB_HOME/gitlab-runner:/etc/gitlab-runner'
+  #  # networks:
+  #  #   : gitlab
 networks:
   gitlab:
     name: gitlab-network

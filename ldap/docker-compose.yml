@@ -1,22 +1,11 @@
 version: '3'
 services:
-  # nginx:
-  #   build: nginx
-  #   container_name: nginx
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   ports:
-  #     - 80:80
-  #   networks:
-  #     - mycompany  
   openldap:
-    build: openldap
+    image: osixia/openldap:1.5.0
     container_name: openldap
-    networks:
-      - mycompany
     environment:
       LDAP_LOG_LEVEL: "256"
-      LDAP_ORGANISATION: "MyCompany Inc."
+      LDAP_ORGANISATION: "Example Inc."
       LDAP_DOMAIN: "example.org"
       LDAP_BASE_DN: ""
       LDAP_ADMIN_PASSWORD: "admin"
@@ -44,19 +33,19 @@ services:
     tty: true
     stdin_open: true
     volumes:
-      - $LDAP_HOME:/var/lib/ldap
+      - /opt/self-hosted/data/ldap:/var/lib/ldap
       - /opt/self-hosted/data/dldap.d:/etc/ldap/slapd.d
-      # - /container/service/slapd/assets/certs/
-    # ports:
-    #  - "389:389"
-    #  - "636:636"
+      - /container/service/slapd/assets/certs/
+    ports:
+      - "389:389"
+      - "636:636"
     # For replication to work correctly, domainname and hostname must be
     # set correctly so that "hostname"."domainname" equates to the
     # fully-qualified domain name for the host.
     domainname: "example.org"
     hostname: "ldap-server"
   phpldapadmin:
-    build: phpldapadmin
+    image: osixia/phpldapadmin:latest
     container_name: phpldapadmin
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
@@ -65,41 +54,10 @@ services:
       - "8080:80"
     depends_on:
       - openldap
-    networks:
-      - mycompany
-  gitlab-web:
-    build: gitlab-web
-    container_name: gitlab-web
-    environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab-ce'
-        gitlab_rails['ldap_enabled'] = true
-        gitlab_rails['ldap_host'] = 'openldap'
-        gitlab_rails['ldap_port'] = 389
-        gitlab_rails['ldap_uid'] = 'uid'
-        gitlab_rails['ldap_method'] = 'plain' # 'ssl' or 'plain'
-        gitlab_rails['ldap_bind_dn'] = 'cn=admin,dc=example,dc=org'
-        gitlab_rails['ldap_password'] = 'admin'
-        gitlab_rails['ldap_allow_username_or_email_login'] = true
-        gitlab_rails['ldap_base'] = 'dc=example,dc=org' 
-    ports:
-      - '7080:80'
-      - '7443:443'
-      - '7022:22'
-    volumes:
-      - '$GITLAB_HOME/config:/etc/gitlab'
-      - '$GITLAB_HOME/logs:/var/log/gitlab'
-      - '$GITLAB_HOME/data:/var/opt/gitlab'
-    networks:
-      - mycompany  
-  gitlab-runner:
-    build: gitlab-runner
-    container_name: gitlab-runner
-    volumes:
-      - '$GITLAB_HOME/gitlab-runner:/etc/gitlab-runner'
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - mycompany
+  networks:
+    default:
+      - ldap
 networks:
-  mycompany:
-    name: mycompany-network
+  default:
+    external:
+      name: mycomp    
